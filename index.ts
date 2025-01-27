@@ -50,12 +50,16 @@ interface Activity {
 }
 
 let updated: boolean = false;
-const pluginName = "MusicBee Listen Together";
+
+const pluginName = "MusicBee Together";
+
+const port = 9696;
+const baseUrl = `localhost:${port}/musicbee/`;
 
 export default definePlugin({
     name: pluginName,
     description: "Adds a Listen Together button on the MusicBee activity",
-    authors: [{ name: "BloodLantern", id: 1n }, { name: "YohannDR", id: 2n }],
+    authors: [{ name: "BloodLantern", id: 256003154045435906n }, { name: "YohannDR", id: 418445860028940289n }],
 
     flux: {
         LOCAL_ACTIVITY_UPDATE(param: any | null | undefined) {
@@ -69,31 +73,49 @@ export default definePlugin({
             if (param.activity === null || param.activity === undefined)
                 return;
 
+            const { activity } = param;
+
             const logger: Logger = new Logger(pluginName);
 
-            const { activity } = param;
+            logger.info("Received local activity update for " + activity.name);
+
+            if (activity.name !== "MusicBee")
+                return;
+
+            logger.info("Activity comes from MusicBee, requesting current track");
 
             activity.buttons = [
                 "Button1",
                 "Button2"
             ];
-            activity.metadata = {
-                button_urls: [
-                    "https://google.com",
-                    "https://discord.com"
-                ]
-            };
 
-            logger.info(activity);
-            logger.info(activity.name);
+            fetch(baseUrl + "currenttrack")
+                .then(resp => resp.json())
+                .then(data => {
+                    logger.info("Received GET request result: " + data);
 
-            updated = true;
+                    activity.metadata = {
+                        button_urls: [
+                            data,
+                            "https://discord.com"
+                        ]
+                    };
 
-            FluxDispatcher.dispatch({
-                type: "LOCAL_ACTIVITY_UPDATE",
-                activity,
-                socketId: "MusicBee",
-            });
+                    logger.info("Callback called");
+                    logger.info(activity);
+                    logger.info(activity.name);
+
+                    updated = true;
+
+                    FluxDispatcher.dispatch({
+                        type: "LOCAL_ACTIVITY_UPDATE",
+                        activity,
+                        socketId: "MusicBee",
+                    });
+                })
+                .catch(function (error) {
+                    logger.error(error);
+                });
         },
     }
 });
