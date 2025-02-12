@@ -71,14 +71,21 @@ export default definePlugin({
 });
 
 async function handleRequest() {
-    await fetch(musicBeeBaseUrl + "currenttrack")
-        .then(res => res.json())
-        .then(json => JSON.parse(json))
-        .then(function (data) {
-            logger.info("Received response: " + data);
-        })
-        .catch(function (error) {
-            logger.error(error);
-        });
+    const response = await fetch(musicBeeBaseUrl + "currenttrack");
+
+    if (!response.ok) {
+        logger.info("MusicBee plugin is not installed");
+        return;
+    }
+
+    const json = response.json();
+    // .then(res => res.json())
+    // .then(json => JSON.parse(json))
+    // .then(function (data) {
+    //     logger.info("Received response: " + data);
+    // })
+    // .catch(function (error) {
+    //     logger.error(error);
+    // });
 }
 
