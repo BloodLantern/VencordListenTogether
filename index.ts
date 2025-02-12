@@ -6,7 +6,6 @@
 
 import { Logger } from "@utils/Logger";
 import definePlugin from "@utils/types";
-import { RestAPI } from "@webpack/common";
 
 export interface ActivityAssets {
     large_image?: string;
@@ -72,9 +71,11 @@ export default definePlugin({
 });
 
 async function handleRequest() {
-    await RestAPI.get({ url: musicBeeBaseUrl + "currenttrack" })
-        .then(function (res) {
-            logger.info("Received response: " + res);
+    await fetch(musicBeeBaseUrl + "currenttrack")
+        .then(res => res.json())
+        .then(json => JSON.parse(json))
+        .then(function (data) {
+            logger.info("Received response: " + data);
         })
         .catch(function (error) {
             logger.error(error);
